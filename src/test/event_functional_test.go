@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/groundstorm/cobalt/src/event"
+	"github.com/groundstorm/cobalt/src/models"
 	"github.com/groundstorm/cobalt/src/storage"
-	"github.com/groundstorm/cobalt/src/users"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,20 +13,22 @@ func TestNewEvent(t *testing.T) {
 	ms := storage.NewMemoryStorage()
 
 	// create a new event
-	e := event.Event{
+	e := models.Event{
 		Slug: "test_event",
 	}
-	err := ms.CreateEvent(e)
+	eventID, err := ms.CreateEvent(e)
 	assert.Nil(t, err)
 
 	// Add a ton of users.
 	for i := 0; i < 10; i++ {
-		user := users.User{
+		user := models.User{
 			FirstName: fmt.Sprintf("First Name %d", i),
 			LastName:  fmt.Sprintf("Last Name %d", i),
-			Email:     users.Email(fmt.Sprintf("first%d@last.com", i)),
+			Email:     models.Email(fmt.Sprintf("first%d@last.com", i)),
 		}
-		_, err := ms.CreateNewUser(user, "827135871546")
+		userID, err := ms.CreateNewUser(user, "827135871546")
+		assert.Nil(t, err)
+		err = ms.AddUserToEvent(eventID, userID)
 		assert.Nil(t, err)
 	}
 }

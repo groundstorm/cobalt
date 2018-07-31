@@ -1,12 +1,12 @@
 package storage
 
 import (
-	"github.com/groundstorm/cobalt/src/users"
+	"github.com/groundstorm/cobalt/src/models"
 )
 
-// MemoryStorageUser overrides users.User so we can more easily implement the
+// MemoryStorageUser overrides User so we can more easily implement the
 // memory storage backend
 type memoryStorageUser struct {
-	users.User
+	models.User
 	password string
 }

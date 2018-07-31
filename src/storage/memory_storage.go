@@ -3,8 +3,7 @@ package storage
 import (
 	"strconv"
 
-	"github.com/groundstorm/cobalt/src/event"
-	"github.com/groundstorm/cobalt/src/users"
+	"github.com/groundstorm/cobalt/src/models"
 )
 
 // MemoryStorage implements the storage interfaces in memory.  Useful for automated
@@ -23,20 +22,20 @@ func NewMemoryStorage() *MemoryStorage {
 }
 
 // AuthenticateUser looks up the user by email and password
-func (ms *MemoryStorage) AuthenticateUser(email users.Email, password string) (users.User, error) {
+func (ms *MemoryStorage) AuthenticateUser(email models.Email, password string) (models.User, error) {
 	for _, u := range ms.users {
 		if u.Email == email {
 			if u.password != password {
-				return users.User{}, ErrInvalidPassword
+				return models.User{}, ErrInvalidPassword
 			}
 			return u.User, nil
 		}
 	}
-	return users.User{}, ErrUnknownUser
+	return models.User{}, ErrUnknownUser
 }
 
 // CreateNewUser creates a new user
-func (ms *MemoryStorage) CreateNewUser(user users.User, password string) (users.ID, error) {
+func (ms *MemoryStorage) CreateNewUser(user models.User, password string) (models.UserID, error) {
 	for _, u := range ms.users {
 		if u.Email == user.Email {
 			return "", ErrUserAlreadyExists
@@ -44,7 +43,7 @@ func (ms *MemoryStorage) CreateNewUser(user users.User, password string) (users.
 	}
 
 	ms.nextUserID++
-	user.ID = users.ID(strconv.Itoa(ms.nextUserID))
+	user.ID = models.UserID(strconv.Itoa(ms.nextUserID))
 	ms.users = append(ms.users, memoryStorageUser{
 		User:     user,
 		password: password,
@@ -52,10 +51,15 @@ func (ms *MemoryStorage) CreateNewUser(user users.User, password string) (users.
 	return user.ID, nil
 }
 
-func (ms *MemoryStorage) LoadEvent(id event.ID) (event.Event, error) {
-	return event.Event{}, nil
+func (ms *MemoryStorage) LoadEvent(id models.EventID) (models.Event, error) {
+	return models.Event{}, nil
 }
 
-func (ms *MemoryStorage) CreateEvent(e event.Event) error {
+func (ms *MemoryStorage) CreateEvent(e models.Event) (models.EventID, error) {
+	var id models.EventID
+	return id, nil
+}
+
+func (ms *MemoryStorage) AddUserToEvent(eventID models.EventID, userID models.UserID) error {
 	return nil
 }

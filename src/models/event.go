@@ -1,10 +1,10 @@
-package event
+package models
 
 // ID represents a globally unique identifier for this event
-type ID string
+type EventID string
 
 // Event tracks big events like Evo.  Many tournaments, many players, etc.
 type Event struct {
-	ID   ID
+	ID   EventID
 	Slug string
 }
