@@ -18,6 +18,7 @@ func createUsersAPI(c *restful.Container) {
 
 	ws.Route(
 		ws.POST("/users").
+			Doc("Creates a new user").
 			To(createUser).
 			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Reads(NewUser{}).

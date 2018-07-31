@@ -7,14 +7,26 @@ import (
 
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	spec "github.com/go-openapi/spec"
 
 	"github.com/groundstorm/cobalt/apps/go/src/cobalt/api"
 )
 
 func serveSwaggerUI(c *restful.Container) {
+	addInfoToSwagger := func(s *spec.Swagger) {
+		s.Info = &spec.Info{
+			InfoProps: spec.InfoProps{
+				Version:     "0.0.1",
+				Title:       "Cobalt Event Server",
+				Description: "cobalt event server",
+			},
+		}
+	}
+
 	openAPIConfig := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
 		APIPath:     "/apidocs.json",
+		PostBuildSwaggerObjectHandler: addInfoToSwagger,
 	}
 	swaggerUIPath := "/apidocs/"
 	swaggerDir := "./apps/go/static/swagger-ui/dist"
