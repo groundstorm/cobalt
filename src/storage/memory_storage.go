@@ -24,19 +24,19 @@ func (ms *MemoryStorage) AuthenticateUser(email users.Email, password string) (u
 	for _, u := range ms.users {
 		if u.Email == email {
 			if u.password != password {
-				return users.User{}, users.ErrInvalidPassword
+				return users.User{}, ErrInvalidPassword
 			}
 			return u.User, nil
 		}
 	}
-	return users.User{}, users.ErrUnknownUser
+	return users.User{}, ErrUnknownUser
 }
 
 // CreateNewUser creates a new user
 func (ms *MemoryStorage) CreateNewUser(user users.User, password string) error {
 	for _, u := range ms.users {
 		if u.Email == user.Email {
-			return users.ErrUserAlreadyExists
+			return ErrUserAlreadyExists
 		}
 	}
 	ms.users = append(ms.users, memoryStorageUser{

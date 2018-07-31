@@ -24,7 +24,7 @@ func TestNewEvent(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		user := users.User{
 			FirstName: fmt.Sprintf("First Name %d", i),
-			LastName:  fmt.Sprintf("Laste Name %d", i),
+			LastName:  fmt.Sprintf("Last Name %d", i),
 			Email:     users.Email(fmt.Sprintf("first%d@last.com", i)),
 		}
 		err = ms.CreateNewUser(user, "827135871546")
