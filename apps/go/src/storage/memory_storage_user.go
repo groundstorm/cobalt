@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/groundstorm/cobalt/src/models"
+	"github.com/groundstorm/cobalt/apps/go/src/models"
 )
 
 // MemoryStorageUser overrides User so we can more easily implement the

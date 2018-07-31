@@ -3,7 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"github.com/groundstorm/cobalt/src/models"
+	"github.com/groundstorm/cobalt/apps/go/src/models"
 )
 
 // The Storage interface is used to load and store user information

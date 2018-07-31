@@ -3,8 +3,8 @@ package test
 import (
 	"testing"
 
-	"github.com/groundstorm/cobalt/src/models"
-	"github.com/groundstorm/cobalt/src/storage"
+	"github.com/groundstorm/cobalt/apps/go/src/models"
+	"github.com/groundstorm/cobalt/apps/go/src/storage"
 )
 
 func TestNewUser(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 
-	"github.com/groundstorm/cobalt/src/api"
+	"github.com/groundstorm/cobalt/apps/go/src/cobalt/api"
 )
 
 func serveSwaggerUI(c *restful.Container) {
@@ -17,7 +17,7 @@ func serveSwaggerUI(c *restful.Container) {
 		APIPath:     "/apidocs.json",
 	}
 	swaggerUIPath := "/apidocs/"
-	swaggerDir := "./frontend/swagger-ui/dist"
+	swaggerDir := "./apps/go/static/swagger-ui/dist"
 
 	c.Add(restfulspec.NewOpenAPIService(openAPIConfig))
 	c.ServeMux.Handle(swaggerUIPath, http.StripPrefix(swaggerUIPath, http.FileServer(http.Dir(swaggerDir))))

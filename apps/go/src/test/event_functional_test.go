@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/groundstorm/cobalt/src/models"
-	"github.com/groundstorm/cobalt/src/storage"
+	"github.com/groundstorm/cobalt/apps/go/src/models"
+	"github.com/groundstorm/cobalt/apps/go/src/storage"
 	"github.com/stretchr/testify/assert"
 )
 

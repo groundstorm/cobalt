@@ -3,7 +3,7 @@ package storage
 import (
 	"strconv"
 
-	"github.com/groundstorm/cobalt/src/models"
+	"github.com/groundstorm/cobalt/apps/go/src/models"
 )
 
 // MemoryStorage implements the storage interfaces in memory.  Useful for automated
