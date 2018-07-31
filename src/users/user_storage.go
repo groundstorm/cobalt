@@ -6,7 +6,7 @@ import (
 
 // The UserStorage interface is used to load and store user information
 type UserStorage interface {
-	AuthenticateUser(email UserEmail, password string) (User, error)
+	AuthenticateUser(email Email, password string) (User, error)
 	CreateNewUser(user User, password string) error
 }
 

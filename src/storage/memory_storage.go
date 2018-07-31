@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/groundstorm/cobalt/src/event"
 	"github.com/groundstorm/cobalt/src/users"
 )
 
@@ -19,7 +20,7 @@ func NewMemoryStorage() *MemoryStorage {
 }
 
 // AuthenticateUser looks up the user by email and password
-func (ms *MemoryStorage) AuthenticateUser(email users.UserEmail, password string) (users.User, error) {
+func (ms *MemoryStorage) AuthenticateUser(email users.Email, password string) (users.User, error) {
 	for _, u := range ms.users {
 		if u.Email == email {
 			if u.password != password {
@@ -42,5 +43,13 @@ func (ms *MemoryStorage) CreateNewUser(user users.User, password string) error {
 		User:     user,
 		password: password,
 	})
+	return nil
+}
+
+func (ms *MemoryStorage) LoadEvent(id event.ID) (event.Event, error) {
+	return event.Event{}, nil
+}
+
+func (ms *MemoryStorage) CreateEvent(e event.Event) error {
 	return nil
 }
