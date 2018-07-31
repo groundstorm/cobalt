@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"strconv"
+
 	"github.com/groundstorm/cobalt/src/event"
 	"github.com/groundstorm/cobalt/src/users"
 )
@@ -9,7 +11,8 @@ import (
 // testing and rapid iteration during development.  Obviously not suitable for
 // production!
 type MemoryStorage struct {
-	users []memoryStorageUser
+	users      []memoryStorageUser
+	nextUserID int
 }
 
 // NewMemoryStorage creates a new MemoryStorage object
@@ -33,17 +36,20 @@ func (ms *MemoryStorage) AuthenticateUser(email users.Email, password string) (u
 }
 
 // CreateNewUser creates a new user
-func (ms *MemoryStorage) CreateNewUser(user users.User, password string) error {
+func (ms *MemoryStorage) CreateNewUser(user users.User, password string) (users.ID, error) {
 	for _, u := range ms.users {
 		if u.Email == user.Email {
-			return ErrUserAlreadyExists
+			return "", ErrUserAlreadyExists
 		}
 	}
+
+	ms.nextUserID++
+	user.ID = users.ID(strconv.Itoa(ms.nextUserID))
 	ms.users = append(ms.users, memoryStorageUser{
 		User:     user,
 		password: password,
 	})
-	return nil
+	return user.ID, nil
 }
 
 func (ms *MemoryStorage) LoadEvent(id event.ID) (event.Event, error) {

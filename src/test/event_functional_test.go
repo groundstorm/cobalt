@@ -27,7 +27,7 @@ func TestNewEvent(t *testing.T) {
 			LastName:  fmt.Sprintf("Last Name %d", i),
 			Email:     users.Email(fmt.Sprintf("first%d@last.com", i)),
 		}
-		err = ms.CreateNewUser(user, "827135871546")
+		_, err := ms.CreateNewUser(user, "827135871546")
 		assert.Nil(t, err)
 	}
 }
