@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/groundstorm/cobalt/apps/go/src/smashgg"
@@ -8,7 +9,8 @@ import (
 )
 
 func TestSmashGGImport(t *testing.T) {
-	evt, err := smashgg.ImportEvent("evo2018")
+	tourney, err := smashgg.ImportTournament("evo2018")
+	fmt.Printf("%v\n", tourney)
 	assert.Nil(t, err)
-	assert.NotNil(t, evt)
+	assert.NotNil(t, tourney)
 }
