@@ -1,9 +1,9 @@
 package models
 
-// ID represents a globally unique identifier for this tournament
+// TournamentID represents a globally unique identifier for this tournament
 type TournamentID string
 
-// Tournament tracks a single tournament at an event
+// Tournament tracks big events like Evo.  Many events, many players, etc.
 type Tournament struct {
 	ID   TournamentID
 	Slug string
