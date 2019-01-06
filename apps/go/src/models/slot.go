@@ -5,6 +5,7 @@ type SlotID int
 
 // Slot represents either P1 or P2 in a match
 type Slot struct {
-	ID     SlotID
-	UserID UserID
+	ID            SlotID
+	ParticipantID ParticipantID
+	SeedID        SeedID
 }

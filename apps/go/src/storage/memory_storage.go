@@ -10,8 +10,8 @@ import (
 // testing and rapid iteration during development.  Obviously not suitable for
 // production!
 type MemoryStorage struct {
-	users      []memoryStorageUser
-	nextUserID int
+	users             []memoryStorageUser
+	nextParticipantID int
 }
 
 // NewMemoryStorage creates a new MemoryStorage object
@@ -35,15 +35,15 @@ func (ms *MemoryStorage) AuthenticateUser(email models.Email, password string) (
 }
 
 // CreateNewUser creates a new user
-func (ms *MemoryStorage) CreateNewUser(user models.User, password string) (models.UserID, error) {
+func (ms *MemoryStorage) CreateNewUser(user models.User, password string) (models.ParticipantID, error) {
 	for _, u := range ms.users {
 		if u.Email == user.Email {
 			return "", ErrUserAlreadyExists
 		}
 	}
 
-	ms.nextUserID++
-	user.ID = models.UserID(strconv.Itoa(ms.nextUserID))
+	ms.nextParticipantID++
+	user.ID = models.ParticipantID(strconv.Itoa(ms.nextParticipantID))
 	ms.users = append(ms.users, memoryStorageUser{
 		User:     user,
 		password: password,
@@ -60,6 +60,6 @@ func (ms *MemoryStorage) CreateEvent(e models.Event) (models.EventID, error) {
 	return id, nil
 }
 
-func (ms *MemoryStorage) AddUserToEvent(eventID models.EventID, userID models.UserID) error {
+func (ms *MemoryStorage) AddUserToEvent(eventID models.EventID, participantID models.ParticipantID) error {
 	return nil
 }

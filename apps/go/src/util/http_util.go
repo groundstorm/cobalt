@@ -35,7 +35,7 @@ func GetURL(url string, log *logging.Logger) ([]byte, error) {
 	// Try to read the cached content.  If it's there, great!
 	result, err := ioutil.ReadFile(cacheFile)
 	if err == nil {
-		log.Debugf("returning cachced %s", url)
+		log.Debugf("returning cached %s from %s", url, urlHash)
 		return result, err
 	}
 

@@ -5,5 +5,7 @@ type SetID int
 
 // Set tracks a single match in a bracket
 type Set struct {
-	ID SetID
+	ID       SetID
+	WinnerID ParticipantID
+	Slots    []Slot
 }

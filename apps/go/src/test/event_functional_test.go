@@ -26,9 +26,9 @@ func TestNewEvent(t *testing.T) {
 			LastName:  fmt.Sprintf("Last Name %d", i),
 			Email:     models.Email(fmt.Sprintf("first%d@last.com", i)),
 		}
-		userID, err := ms.CreateNewUser(user, "827135871546")
+		participantID, err := ms.CreateNewUser(user, "827135871546")
 		assert.Nil(t, err)
-		err = ms.AddUserToEvent(eventID, userID)
+		err = ms.AddUserToEvent(eventID, participantID)
 		assert.Nil(t, err)
 	}
 }

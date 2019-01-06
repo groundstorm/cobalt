@@ -11,10 +11,10 @@ type Storage interface {
 	CreateEvent(e models.Event) (models.EventID, error)
 	LoadEvent(id models.EventID) (models.Event, error)
 
-	CreateNewUser(user models.User, password string) (models.UserID, error)
+	CreateNewUser(user models.User, password string) (models.ParticipantID, error)
 	AuthenticateUser(email models.Email, password string) (models.User, error)
 
-	AddUserToEvent(eventID models.EventID, userID models.UserID) error
+	AddUserToEvent(eventID models.EventID, ParticipantID models.ParticipantID) error
 }
 
 var (

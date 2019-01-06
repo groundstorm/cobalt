@@ -35,15 +35,21 @@ type EventQuery struct {
 type GroupQuery struct {
 	Entities struct {
 		Group struct {
-			ID            int    `json:"id"`
-			PhaseID       int    `json:"phaseId"`
-			PoolRefUserID int    `json:"poolRefId"`
-			StationID     int    `json:"stationId"`
-			Name          string `json:"displayIdentifier"`
-			StartAt       int    `json:"startAt"`
+			ID                   int    `json:"id"`
+			PhaseID              int    `json:"phaseId"`
+			PoolRefParticipantID int    `json:"poolRefId"`
+			StationID            int    `json:"stationId"`
+			Name                 string `json:"displayIdentifier"`
+			StartAt              int    `json:"startAt"`
 		} `json:"groups"`
 		Sets []struct {
 			ID int `json:"id"`
 		} `json:"sets"`
+		Seeds []struct {
+			ID        int  `json:"id"`
+			EntrantID int  `json:"entrantId"`
+			Num       int  `json:"seedNum"`
+			IsBye     bool `json:"isBye"`
+		} `json:"seeds"`
 	} `json:"entities"`
 }
