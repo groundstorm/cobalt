@@ -7,7 +7,6 @@ import (
 	"github.com/groundstorm/cobalt/apps/go/src/models"
 
 	"github.com/boltdb/bolt"
-	"github.com/groundstorm/cobalt/apps/go/src/smashgg"
 	logging "github.com/op/go-logging"
 )
 
@@ -38,15 +37,8 @@ func (a *App) Close() {
 
 // ImportAttendees will import the attendee list for a tournament into
 // the db.
-func (a *App) FetchRegs(slug string) error {
-	log.Infof("fetching registration list")
-	attendees, err := smashgg.FetchAttendees(slug)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("storing %d participants for %s", len(attendees.Participants), slug)
-	err = a.db.Update(func(tx *bolt.Tx) error {
+func (a *App) StoreRegs(slug string, attendees *models.Attendees) error {
+	return a.db.Update(func(tx *bolt.Tx) error {
 		ab, err := makeBucketForAttendees(tx, slug)
 		if err != nil {
 			log.Errorf(`failed getting bucket for "%s": %s`, slug, err)
@@ -68,10 +60,6 @@ func (a *App) FetchRegs(slug string) error {
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (a *App) LoadRegs(slug string) (*models.Attendees, error) {

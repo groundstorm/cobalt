@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 
@@ -170,7 +171,7 @@ func GetTournamentID(slug string) (models.TournamentID, error) {
 	return models.TournamentID(q.Entities.Tournament.ID), nil
 }
 
-func FetchAttendees(slug string) (*models.Attendees, error) {
+func FetchAttendees(slug string) ([]byte, error) {
 	client := &http.Client{
 		Jar: cookieJar,
 	}
@@ -198,10 +199,18 @@ func FetchAttendees(slug string) (*models.Attendees, error) {
 		return nil, err
 	}
 	defer exportResponse.Body.Close()
+	return ioutil.ReadAll(exportResponse.Body)
+}
 
+func LoadAttendees(str string) (*models.Attendees, error) {
 	// Parse!
-	r := csv.NewReader(exportResponse.Body)
+	r := csv.NewReader(strings.NewReader(str))
+
 	r.LazyQuotes = true
+
+	// The exporter for evo 2017 data for some reason is not returning the same number
+	// of fields for all records.  This will turn off that error
+	r.FieldsPerRecord = -1
 
 	header, err := r.Read()
 	if err != nil {
@@ -219,13 +228,18 @@ func FetchAttendees(slug string) (*models.Attendees, error) {
 		Participants: make([]models.Participant, len(records), len(records)),
 	}
 
-	id_offset := pos["Id"]
+	// evo 2017 exports have a single "name" field.
+	name_offset := pos["Name"]
+
+	// evo 2017 exports have both first name and last name
 	first_offset := pos["First Name"]
 	last_offset := pos["Last Name"]
+
+	id_offset := pos["Id"]
 	email_offset := pos["Email"]
 	for i, record := range records {
 		id, _ := strconv.Atoi(record[id_offset])
-		a.Participants[i] = models.Participant{
+		p := models.Participant{
 			ID: models.ParticipantID(id),
 			Player: models.Player{
 				FirstName: record[first_offset],
@@ -233,6 +247,20 @@ func FetchAttendees(slug string) (*models.Attendees, error) {
 				Email:     models.Email(record[email_offset]),
 			},
 		}
+
+		if name_offset > 0 {
+			names := strings.SplitN(record[name_offset], " ", 2)
+			p.Player.FirstName = names[0]
+			if len(names) > 1 {
+				p.Player.LastName = names[1]
+			} else {
+				p.Player.LastName = ""
+			}
+		} else {
+			p.Player.FirstName = record[first_offset]
+			p.Player.LastName = record[last_offset]
+		}
+		a.Participants[i] = p
 	}
 
 	return a, nil

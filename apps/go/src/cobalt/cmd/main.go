@@ -3,17 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/groundstorm/cobalt/apps/go/src/cobalt/app"
+	"github.com/groundstorm/cobalt/apps/go/src/smashgg"
 	logging "github.com/op/go-logging"
 )
 
 var (
-	verboseFlag      = flag.Bool("v", false, "verbose logging")
-	fetchRegsCommand = flag.NewFlagSet("fetch-regs", flag.ExitOnError)
-	showRegsCommand  = flag.NewFlagSet("show-regs", flag.ExitOnError)
+	log         = logging.MustGetLogger("cmd")
+	verboseFlag = flag.Bool("v", false, "verbose logging")
+
+	fetchRegsCommand    = flag.NewFlagSet("fetch-regs", flag.ExitOnError)
+	fetchRegsStdoutFlag = fetchRegsCommand.Bool("stdout", false, "write to stdout rather than the db")
+
+	showRegsCommand = flag.NewFlagSet("show-regs", flag.ExitOnError)
 )
 
 func init() {
@@ -48,31 +52,54 @@ func main() {
 
 	switch args[0] {
 	case "fetch-regs":
-		fetchRegsCommand.Parse(args[1:])
-		args2 := fetchRegsCommand.Args()
-		if len(args2) != 1 {
-			usage("fetch-regs [tournament slug]")
-		}
-		if err := app.FetchRegs(args2[0]); err != nil {
-			log.Fatalf("error importing: %s", err)
-		}
+		fetchRegs(app, args[1:])
 	case "show-regs":
-		showRegsCommand.Parse(args[1:])
-		args2 := showRegsCommand.Args()
-		if len(args2) != 1 {
-			usage("show-regs [tournament slug]")
-		}
-		a, err := app.LoadRegs(args2[0])
-		if err != nil {
-			log.Fatalf("error loading: %s", err)
-		}
-		for _, p := range a.Participants {
-			fmt.Printf("%v\n", p)
-		}
-		fmt.Printf("%d total registrations", len(a.Participants))
-
+		showRegs(app, args[1:])
 	default:
 		usage("unknown command")
+	}
+}
+
+func fetchRegs(app *app.App, args []string) {
+	fetchRegsCommand.Parse(args)
+	args2 := fetchRegsCommand.Args()
+	if len(args2) != 1 {
+		usage("fetch-regs [tournament slug]")
+	}
+
+	slug := args2[0]
+	log.Infof("fetching registrations for %s", slug)
+	blob, err := smashgg.FetchAttendees(slug)
+	if err != nil {
+		log.Fatalf("failed: %v", err)
+	}
+	if *fetchRegsStdoutFlag {
+		fmt.Println(string(blob))
 		return
 	}
+
+	attendees, err := smashgg.LoadAttendees(string(blob))
+	if err != nil {
+		log.Fatalf("failed to parse attendee list: %v", err)
+	}
+
+	log.Infof("storing %d participants for %s", len(attendees.Participants), slug)
+	if err := app.StoreRegs(slug, attendees); err != nil {
+		log.Fatalf("error importing: %s", err)
+	}
+}
+func showRegs(app *app.App, args []string) {
+	showRegsCommand.Parse(args[1:])
+	args2 := showRegsCommand.Args()
+	if len(args2) != 1 {
+		usage("show-regs [tournament slug]")
+	}
+	a, err := app.LoadRegs(args2[0])
+	if err != nil {
+		log.Fatalf("error loading: %s", err)
+	}
+	for _, p := range a.Participants {
+		fmt.Printf("%v\n", p)
+	}
+	fmt.Printf("%d total registrations", len(a.Participants))
 }
