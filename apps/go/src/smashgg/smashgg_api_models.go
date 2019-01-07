@@ -1,5 +1,17 @@
 package smashgg
 
+type TournamentRegistrationsQuery struct {
+	Entities struct {
+		Tournament struct {
+			ID int `json:"id"`
+		} `json:"tournament"`
+		Events []struct {
+			ID   int    `json:"id"`
+			Name string `json:"name"`
+		} `json:"event"`
+	} `json:"entities"`
+}
+
 type TournamentQuery struct {
 	Entities struct {
 		Tournament struct {

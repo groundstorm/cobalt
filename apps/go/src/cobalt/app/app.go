@@ -51,31 +51,34 @@ func (a *App) StoreRegs(slug string, attendees *models.Attendees) error {
 			return nil
 		})
 		// add the new ones
-		for _, p := range attendees.Participants {
-			value, err := json.Marshal(p)
+		for _, r := range attendees.Registrations {
+			value, err := json.Marshal(r)
 			if err != nil {
-				return fmt.Errorf("failed to marshall participant %d: %s", p.ID, err)
+				return fmt.Errorf("failed to marshall participant %d: %s", r.Participant.ID, err)
 			}
-			ab.Put(p.Key(), value)
+			ab.Put(r.Participant.Key(), value)
 		}
 		return nil
 	})
 }
 
 func (a *App) LoadRegs(slug string) (*models.Attendees, error) {
-	regs := models.NewAttendees()
+	regs := &models.Attendees{
+		Registrations: []models.Registration{},
+		Events:        map[models.EventID]models.Event{},
+	}
 	err := a.db.View(func(tx *bolt.Tx) error {
 		ab := getBucketForAttendees(tx, slug)
 		if ab == nil {
 			return fmt.Errorf("registrations for %s have not been fetched.", slug)
 		}
 		return ab.ForEach(func(k, v []byte) error {
-			var p models.Participant
-			err := json.Unmarshal(v, &p)
+			var r models.Registration
+			err := json.Unmarshal(v, &r)
 			if err != nil {
 				return err
 			}
-			regs.Participants = append(regs.Participants, p)
+			regs.Registrations = append(regs.Registrations, r)
 			return nil
 		})
 	})

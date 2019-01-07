@@ -69,27 +69,31 @@ func fetchRegs(app *app.App, args []string) {
 
 	slug := args2[0]
 	log.Infof("fetching registrations for %s", slug)
-	blob, err := smashgg.FetchAttendees(slug)
+
+	info, err := smashgg.GetTournamentRegistrationInfo(slug)
 	if err != nil {
-		log.Fatalf("failed: %v", err)
+		log.Fatal("failed to get tournament info: %s", err)
 	}
 	if *fetchRegsStdoutFlag {
+		blob, err := smashgg.FetchAttendees(info)
+		if err != nil {
+			log.Fatalf("failed to get attendee list: %v", err)
+		}
 		fmt.Println(string(blob))
 		return
 	}
-
-	attendees, err := smashgg.LoadAttendees(string(blob))
+	attendees, err := smashgg.LoadAttendees(info)
 	if err != nil {
-		log.Fatalf("failed to parse attendee list: %v", err)
+		log.Fatalf("failed to fetch attendee list: %v", err)
 	}
 
-	log.Infof("storing %d participants for %s", len(attendees.Participants), slug)
+	log.Infof("storing %d participants for %s", len(attendees.Registrations), slug)
 	if err := app.StoreRegs(slug, attendees); err != nil {
 		log.Fatalf("error importing: %s", err)
 	}
 }
 func showRegs(app *app.App, args []string) {
-	showRegsCommand.Parse(args[1:])
+	showRegsCommand.Parse(args)
 	args2 := showRegsCommand.Args()
 	if len(args2) != 1 {
 		usage("show-regs [tournament slug]")
@@ -98,8 +102,8 @@ func showRegs(app *app.App, args []string) {
 	if err != nil {
 		log.Fatalf("error loading: %s", err)
 	}
-	for _, p := range a.Participants {
-		fmt.Printf("%v\n", p)
+	for _, r := range a.Registrations {
+		fmt.Printf("%v\n", r)
 	}
-	fmt.Printf("%d total registrations", len(a.Participants))
+	fmt.Printf("%d total registrations", len(a.Registrations))
 }

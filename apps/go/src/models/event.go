@@ -6,6 +6,6 @@ type EventID int
 // Event tracks big events like Evo.  Many tournaments, many players, etc.
 type Event struct {
 	ID     EventID
-	Slug   string
+	Name   string
 	Phases []*Phase
 }

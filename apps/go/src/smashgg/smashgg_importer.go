@@ -1,6 +1,7 @@
 package smashgg
 
 import (
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -82,7 +83,7 @@ func ImportEvent(t *models.Tournament, eventID int) error {
 
 	e := &models.Event{
 		ID:   models.EventID(q.Entities.Event.ID),
-		Slug: q.Entities.Event.Slug,
+		Name: q.Entities.Event.Name,
 	}
 	// Add in all the phases
 	for _, qp := range q.Entities.Phases {
@@ -150,28 +151,23 @@ func ImportTournament(slug string) (*models.Tournament, error) {
 	return t, nil
 }
 
-// GetTournamentID sets the tournament ID from the slug.
-func GetTournamentID(slug string) (models.TournamentID, error) {
-	url := fmt.Sprintf("https://api.smash.gg/tournament/%s", slug)
+// GetTournamentRegistrationInfo gets the tournament info required to interpret the
+// export of registered players.
+func GetTournamentRegistrationInfo(slug string) (*TournamentRegistrationsQuery, error) {
+	q := &TournamentRegistrationsQuery{}
+	url := fmt.Sprintf("https://api.smash.gg/tournament/%s?expand[]=event", slug)
 	bytes, err := util.GetURL(url, log)
 	if err != nil {
-		return models.TournamentID(0), err
+		return q, err
 	}
-	q := struct {
-		Entities struct {
-			Tournament struct {
-				ID int
-			}
-		}
-	}{}
-	err = json.Unmarshal(bytes, &q)
+	err = json.Unmarshal(bytes, q)
 	if err != nil {
-		return models.TournamentID(0), err
+		return q, err
 	}
-	return models.TournamentID(q.Entities.Tournament.ID), nil
+	return q, nil
 }
 
-func FetchAttendees(slug string) ([]byte, error) {
+func FetchAttendees(info *TournamentRegistrationsQuery) ([]byte, error) {
 	client := &http.Client{
 		Jar: cookieJar,
 	}
@@ -189,11 +185,7 @@ func FetchAttendees(slug string) ([]byte, error) {
 	defer response.Body.Close()
 
 	// Now grab the attendees
-	id, err := GetTournamentID(slug)
-	if err != nil {
-		return nil, err
-	}
-	url := fmt.Sprintf("https://smash.gg/api-proxy/tournament/%d/export_attendees", id)
+	url := fmt.Sprintf("https://smash.gg/api-proxy/tournament/%d/export_attendees", info.Entities.Tournament.ID)
 	exportResponse, err := client.Get(url)
 	if err != nil {
 		return nil, err
@@ -202,9 +194,14 @@ func FetchAttendees(slug string) ([]byte, error) {
 	return ioutil.ReadAll(exportResponse.Body)
 }
 
-func LoadAttendees(str string) (*models.Attendees, error) {
+func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error) {
+	data, err := FetchAttendees(info)
+	if err != nil {
+		return nil, err
+	}
+
 	// Parse!
-	r := csv.NewReader(strings.NewReader(str))
+	r := csv.NewReader(bytes.NewReader(data))
 
 	r.LazyQuotes = true
 
@@ -216,51 +213,74 @@ func LoadAttendees(str string) (*models.Attendees, error) {
 	if err != nil {
 		return nil, err
 	}
-	pos := map[string]int{}
+	columns := map[string]int{}
 	for i, name := range header {
-		pos[name] = i
+		columns[name] = i
 	}
 	records, err := r.ReadAll()
 	if err != nil {
 		return nil, err
 	}
 	a := &models.Attendees{
-		Participants: make([]models.Participant, len(records), len(records)),
+		Registrations: make([]models.Registration, len(records), len(records)),
+		Events:        map[models.EventID]models.Event{},
+	}
+
+	for _, e := range info.Entities.Events {
+		eid := models.EventID(e.ID) // XXX: can we just store this as models.EventID in the Query type?
+		a.Events[eid] = models.Event{
+			ID:   eid,
+			Name: e.Name,
+		}
 	}
 
 	// evo 2017 exports have a single "name" field.
-	name_offset := pos["Name"]
-
+	iName := columns["Name"]
 	// evo 2017 exports have both first name and last name
-	first_offset := pos["First Name"]
-	last_offset := pos["Last Name"]
+	iFirstName := columns["First Name"]
+	iLastName := columns["Last Name"]
 
-	id_offset := pos["Id"]
-	email_offset := pos["Email"]
+	iID := columns["Id"]
+	iEmail := columns["Email"]
+
 	for i, record := range records {
-		id, _ := strconv.Atoi(record[id_offset])
-		p := models.Participant{
-			ID: models.ParticipantID(id),
-			Player: models.Player{
-				FirstName: record[first_offset],
-				LastName:  record[last_offset],
-				Email:     models.Email(record[email_offset]),
+		id, _ := strconv.Atoi(record[iID])
+
+		// Do the easy stuff first.
+		r := models.Registration{
+			Participant: models.Participant{
+				ID: models.ParticipantID(id),
+				Player: models.Player{
+					FirstName: record[iFirstName],
+					LastName:  record[iLastName],
+					Email:     models.Email(record[iEmail]),
+				},
 			},
+			Events: map[models.EventID]bool{},
+		}
+		// add in all the games.
+		for _, e := range info.Entities.Events {
+			iEvent := columns[e.Name]
+			if iEvent > 0 {
+				r.Events[models.EventID(e.ID)] = true
+			}
 		}
 
-		if name_offset > 0 {
-			names := strings.SplitN(record[name_offset], " ", 2)
-			p.Player.FirstName = names[0]
+		// The format of the name changed between 2017 and 2018.  Do that now.
+		if iName > 0 {
+			names := strings.SplitN(record[iName], " ", 2)
+			r.Participant.Player.FirstName = names[0]
 			if len(names) > 1 {
-				p.Player.LastName = names[1]
+				r.Participant.Player.LastName = names[1]
 			} else {
-				p.Player.LastName = ""
+				r.Participant.Player.LastName = ""
 			}
 		} else {
-			p.Player.FirstName = record[first_offset]
-			p.Player.LastName = record[last_offset]
+			r.Participant.Player.FirstName = record[iFirstName]
+			r.Participant.Player.LastName = record[iLastName]
 		}
-		a.Participants[i] = p
+
+		a.Registrations[i] = r
 	}
 
 	return a, nil
