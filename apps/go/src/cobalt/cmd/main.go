@@ -75,7 +75,7 @@ func fetchRegs(app *app.App, args []string) {
 		log.Fatal("failed to get tournament info: %s", err)
 	}
 	if *fetchRegsStdoutFlag {
-		blob, err := smashgg.FetchAttendees(info)
+		blob, err := smashgg.LoadAttendeesRaw(info)
 		if err != nil {
 			log.Fatalf("failed to get attendee list: %v", err)
 		}

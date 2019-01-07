@@ -167,7 +167,8 @@ func GetTournamentRegistrationInfo(slug string) (*TournamentRegistrationsQuery, 
 	return q, nil
 }
 
-func FetchAttendees(info *TournamentRegistrationsQuery) ([]byte, error) {
+// LoadAttendeesRaw downloads the raw attendee data from smash.gg (without processing)
+func LoadAttendeesRaw(info *TournamentRegistrationsQuery) ([]byte, error) {
 	client := &http.Client{
 		Jar: cookieJar,
 	}
@@ -194,8 +195,10 @@ func FetchAttendees(info *TournamentRegistrationsQuery) ([]byte, error) {
 	return ioutil.ReadAll(exportResponse.Body)
 }
 
+// LoadAttendees fetches the list of attendees from smash.gg and converts it into
+// our attendees model.
 func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error) {
-	data, err := FetchAttendees(info)
+	data, err := LoadAttendeesRaw(info)
 	if err != nil {
 		return nil, err
 	}
