@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/groundstorm/cobalt/apps/go/src/cobalt/app/config"
 	"github.com/groundstorm/cobalt/apps/go/src/models"
 
 	"github.com/boltdb/bolt"
@@ -16,24 +17,41 @@ var (
 )
 
 type App struct {
-	db *bolt.DB
+	db     *bolt.DB
+	config config.CobaltConfig
 }
 
 func New() (*App, error) {
-	fmt.Printf("opening bolt...")
+	log.Debugf("opening bolt...")
 	db, err := bolt.Open("cobalt.db", 0600, nil)
-	fmt.Printf("done!\n")
+	log.Debugf("done!\n")
 	if err != nil {
 		return nil, err
 	}
-	return &App{
-		db: db,
-	}, nil
+	a := &App{
+		db:     db,
+		config: config.NewCobaltConfig(),
+	}
+
+	err = a.loadConfig()
+	if err != nil {
+		log.Infof("error loading config (%s).  creating new config.", err)
+		err := a.ModifyConfig(func(c *config.CobaltConfig) error {
+			*c = config.NewCobaltConfig()
+			return nil
+		})
+		if err != nil {
+			log.Infof("failed to save new config (%s).", err)
+			return nil, err
+		}
+	}
+	return a, nil
 }
 
 func (a *App) Close() {
 	a.db.Close()
 }
+
 func (a *App) StoreRegs(slug string, regs *models.Registrations) error {
 	return a.db.Update(func(tx *bolt.Tx) error {
 		ab, err := makeBucketForRegistrations(tx, slug)
@@ -83,4 +101,38 @@ func (a *App) GetRegs(slug string) (*models.Registrations, error) {
 		return nil, err
 	}
 	return regs, nil
+}
+
+func (a *App) ModifyConfig(fn func(*config.CobaltConfig) error) error {
+	err := fn(&a.config)
+	if err != nil {
+		return err
+	}
+	return a.db.Update(func(tx *bolt.Tx) error {
+		b, err := makeBucketForConfig(tx)
+		if err != nil {
+			return err
+		}
+		value, err := json.Marshal(&a.config)
+		if err != nil {
+			return fmt.Errorf("failed to marshall config: %s", err)
+		}
+		b.Put([]byte("config"), value)
+		return nil
+	})
+}
+
+func (a *App) GetConfig() config.CobaltConfig {
+	return a.config
+}
+
+func (a *App) loadConfig() error {
+	return a.db.View(func(tx *bolt.Tx) error {
+		b := getBucketForConfig(tx)
+		if b == nil {
+			return fmt.Errorf("config bucket not found")
+		}
+		value := b.Get([]byte("config"))
+		return json.Unmarshal(value, &a.config)
+	})
 }

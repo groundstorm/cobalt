@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -17,7 +18,8 @@ var (
 	getRegsCommand    = flag.NewFlagSet("get-regs", flag.ExitOnError)
 	getRegsStdoutFlag = getRegsCommand.Bool("stdout", false, "write to stdout rather than the db")
 
-	showRegsCommand = flag.NewFlagSet("show-regs", flag.ExitOnError)
+	showRegsCommand   = flag.NewFlagSet("show-regs", flag.ExitOnError)
+	showConfigCommand = flag.NewFlagSet("show-config", flag.ExitOnError)
 )
 
 func init() {
@@ -55,6 +57,8 @@ func main() {
 		getRegs(app, args[1:])
 	case "show-regs":
 		showRegs(app, args[1:])
+	case "show-config":
+		showConfig(app, args[1:])
 	default:
 		usage("unknown command")
 	}
@@ -106,4 +110,13 @@ func showRegs(app *app.App, args []string) {
 		fmt.Printf("%v\n", r)
 	}
 	fmt.Printf("%d total registrations", len(a.Registrations))
+}
+
+func showConfig(app *app.App, args []string) {
+	config := app.GetConfig()
+	value, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		log.Fatalf("error formatting config: %v", err)
+	}
+	fmt.Println(string(value))
 }

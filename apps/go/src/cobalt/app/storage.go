@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	configBucket        = "config"
 	tourneyBucket       = "tourney"
 	registrationsBucket = "registrations"
 )
@@ -52,4 +53,12 @@ func getBucketForRegistrations(tx *bolt.Tx, slug string) *bolt.Bucket {
 
 func makeBucketForRegistrations(tx *bolt.Tx, slug string) (*bolt.Bucket, error) {
 	return makeBucketForPath(tx, tourneyBucket, slug, registrationsBucket)
+}
+
+func getBucketForConfig(tx *bolt.Tx) *bolt.Bucket {
+	return getBucketForPath(tx, configBucket)
+}
+
+func makeBucketForConfig(tx *bolt.Tx) (*bolt.Bucket, error) {
+	return makeBucketForPath(tx, configBucket)
 }
