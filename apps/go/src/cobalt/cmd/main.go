@@ -98,7 +98,7 @@ func showRegs(app *app.App, args []string) {
 	if len(args2) != 1 {
 		usage("show-regs [tournament slug]")
 	}
-	a, err := app.LoadRegs(args2[0])
+	a, err := app.GetRegs(args2[0])
 	if err != nil {
 		log.Fatalf("error loading: %s", err)
 	}

@@ -225,7 +225,7 @@ func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error
 		return nil, err
 	}
 	a := &models.Attendees{
-		Registrations: make([]models.Registration, len(records), len(records)),
+		Registrations: map[models.ParticipantID]models.Registration{},
 		Events:        map[models.EventID]models.Event{},
 	}
 
@@ -246,7 +246,7 @@ func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error
 	iID := columns["Id"]
 	iEmail := columns["Email"]
 
-	for i, record := range records {
+	for _, record := range records {
 		id, _ := strconv.Atoi(record[iID])
 
 		// Do the easy stuff first.
@@ -283,7 +283,7 @@ func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error
 			r.Participant.Player.LastName = record[iLastName]
 		}
 
-		a.Registrations[i] = r
+		a.Registrations[r.Participant.ID] = r
 	}
 
 	return a, nil

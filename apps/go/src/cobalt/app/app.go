@@ -62,9 +62,9 @@ func (a *App) StoreRegs(slug string, attendees *models.Attendees) error {
 	})
 }
 
-func (a *App) LoadRegs(slug string) (*models.Attendees, error) {
+func (a *App) GetRegs(slug string) (*models.Attendees, error) {
 	regs := &models.Attendees{
-		Registrations: []models.Registration{},
+		Registrations: map[models.ParticipantID]models.Registration{},
 		Events:        map[models.EventID]models.Event{},
 	}
 	err := a.db.View(func(tx *bolt.Tx) error {
@@ -78,7 +78,7 @@ func (a *App) LoadRegs(slug string) (*models.Attendees, error) {
 			if err != nil {
 				return err
 			}
-			regs.Registrations = append(regs.Registrations, r)
+			regs.Registrations[r.Participant.ID] = r
 			return nil
 		})
 	})
