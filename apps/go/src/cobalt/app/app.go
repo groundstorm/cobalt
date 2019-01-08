@@ -34,24 +34,21 @@ func New() (*App, error) {
 func (a *App) Close() {
 	a.db.Close()
 }
-
-// ImportAttendees will import the attendee list for a tournament into
-// the db.
-func (a *App) StoreRegs(slug string, attendees *models.Attendees) error {
+func (a *App) StoreRegs(slug string, regs *models.Registrations) error {
 	return a.db.Update(func(tx *bolt.Tx) error {
-		ab, err := makeBucketForAttendees(tx, slug)
+		ab, err := makeBucketForRegistrations(tx, slug)
 		if err != nil {
 			log.Errorf(`failed getting bucket for "%s": %s`, slug, err)
 			return err
 		}
 
-		// remove all existing attendees
+		// remove all existing registrations
 		ab.ForEach(func(k, v []byte) error {
 			ab.Delete(k)
 			return nil
 		})
 		// add the new ones
-		for _, r := range attendees.Registrations {
+		for _, r := range regs.Registrations {
 			value, err := json.Marshal(r)
 			if err != nil {
 				return fmt.Errorf("failed to marshall participant %d: %s", r.Participant.ID, err)
@@ -62,13 +59,13 @@ func (a *App) StoreRegs(slug string, attendees *models.Attendees) error {
 	})
 }
 
-func (a *App) GetRegs(slug string) (*models.Attendees, error) {
-	regs := &models.Attendees{
+func (a *App) GetRegs(slug string) (*models.Registrations, error) {
+	regs := &models.Registrations{
 		Registrations: map[models.ParticipantID]models.Registration{},
 		Events:        map[models.EventID]models.Event{},
 	}
 	err := a.db.View(func(tx *bolt.Tx) error {
-		ab := getBucketForAttendees(tx, slug)
+		ab := getBucketForRegistrations(tx, slug)
 		if ab == nil {
 			return fmt.Errorf("registrations for %s have not been fetched.", slug)
 		}

@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	kTourneyBucket   = "tourney"
-	kAttendeesBucket = "tourney"
+	tourneyBucket       = "tourney"
+	registrationsBucket = "registrations"
 )
 
 func makeBucketForPath(tx *bolt.Tx, names ...string) (*bolt.Bucket, error) {
@@ -46,10 +46,10 @@ func getBucketForPath(tx *bolt.Tx, names ...string) *bolt.Bucket {
 	}
 	return b
 }
-func getBucketForAttendees(tx *bolt.Tx, slug string) *bolt.Bucket {
-	return getBucketForPath(tx, kTourneyBucket, slug, kAttendeesBucket)
+func getBucketForRegistrations(tx *bolt.Tx, slug string) *bolt.Bucket {
+	return getBucketForPath(tx, tourneyBucket, slug, registrationsBucket)
 }
 
-func makeBucketForAttendees(tx *bolt.Tx, slug string) (*bolt.Bucket, error) {
-	return makeBucketForPath(tx, kTourneyBucket, slug, kAttendeesBucket)
+func makeBucketForRegistrations(tx *bolt.Tx, slug string) (*bolt.Bucket, error) {
+	return makeBucketForPath(tx, tourneyBucket, slug, registrationsBucket)
 }

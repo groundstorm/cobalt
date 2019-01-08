@@ -75,14 +75,14 @@ func getRegs(app *app.App, args []string) {
 		log.Fatal("failed to get tournament info: %s", err)
 	}
 	if *getRegsStdoutFlag {
-		blob, err := smashgg.LoadAttendeesRaw(info)
+		blob, err := smashgg.LoadRegistrationsRaw(info)
 		if err != nil {
 			log.Fatalf("failed to get attendee list: %v", err)
 		}
 		fmt.Println(string(blob))
 		return
 	}
-	attendees, err := smashgg.LoadAttendees(info)
+	attendees, err := smashgg.LoadRegistrations(info)
 	if err != nil {
 		log.Fatalf("failed to get attendee list: %v", err)
 	}

@@ -167,8 +167,8 @@ func GetTournamentRegistrationInfo(slug string) (*TournamentRegistrationsQuery, 
 	return q, nil
 }
 
-// LoadAttendeesRaw downloads the raw attendee data from smash.gg (without processing)
-func LoadAttendeesRaw(info *TournamentRegistrationsQuery) ([]byte, error) {
+// LoadRegistrationsRaw downloads the raw attendee data from smash.gg (without processing)
+func LoadRegistrationsRaw(info *TournamentRegistrationsQuery) ([]byte, error) {
 	client := &http.Client{
 		Jar: cookieJar,
 	}
@@ -195,10 +195,10 @@ func LoadAttendeesRaw(info *TournamentRegistrationsQuery) ([]byte, error) {
 	return ioutil.ReadAll(exportResponse.Body)
 }
 
-// LoadAttendees fetches the list of attendees from smash.gg and converts it into
+// LoadRegistrations fetches the list of attendees from smash.gg and converts it into
 // our attendees model.
-func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error) {
-	data, err := LoadAttendeesRaw(info)
+func LoadRegistrations(info *TournamentRegistrationsQuery) (*models.Registrations, error) {
+	data, err := LoadRegistrationsRaw(info)
 	if err != nil {
 		return nil, err
 	}
@@ -224,14 +224,14 @@ func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error
 	if err != nil {
 		return nil, err
 	}
-	a := &models.Attendees{
+	regs := &models.Registrations{
 		Registrations: map[models.ParticipantID]models.Registration{},
 		Events:        map[models.EventID]models.Event{},
 	}
 
 	for _, e := range info.Entities.Events {
 		eid := models.EventID(e.ID) // XXX: can we just store this as models.EventID in the Query type?
-		a.Events[eid] = models.Event{
+		regs.Events[eid] = models.Event{
 			ID:   eid,
 			Name: e.Name,
 		}
@@ -283,8 +283,8 @@ func LoadAttendees(info *TournamentRegistrationsQuery) (*models.Attendees, error
 			r.Participant.Player.LastName = record[iLastName]
 		}
 
-		a.Registrations[r.Participant.ID] = r
+		regs.Registrations[r.Participant.ID] = r
 	}
 
-	return a, nil
+	return regs, nil
 }
