@@ -14,8 +14,8 @@ var (
 	log         = logging.MustGetLogger("cmd")
 	verboseFlag = flag.Bool("v", false, "verbose logging")
 
-	fetchRegsCommand    = flag.NewFlagSet("fetch-regs", flag.ExitOnError)
-	fetchRegsStdoutFlag = fetchRegsCommand.Bool("stdout", false, "write to stdout rather than the db")
+	getRegsCommand    = flag.NewFlagSet("get-regs", flag.ExitOnError)
+	getRegsStdoutFlag = getRegsCommand.Bool("stdout", false, "write to stdout rather than the db")
 
 	showRegsCommand = flag.NewFlagSet("show-regs", flag.ExitOnError)
 )
@@ -51,8 +51,8 @@ func main() {
 	defer app.Close()
 
 	switch args[0] {
-	case "fetch-regs":
-		fetchRegs(app, args[1:])
+	case "get-regs":
+		getRegs(app, args[1:])
 	case "show-regs":
 		showRegs(app, args[1:])
 	default:
@@ -60,21 +60,21 @@ func main() {
 	}
 }
 
-func fetchRegs(app *app.App, args []string) {
-	fetchRegsCommand.Parse(args)
-	args2 := fetchRegsCommand.Args()
+func getRegs(app *app.App, args []string) {
+	getRegsCommand.Parse(args)
+	args2 := getRegsCommand.Args()
 	if len(args2) != 1 {
-		usage("fetch-regs [tournament slug]")
+		usage("get-regs [tournament slug]")
 	}
 
 	slug := args2[0]
-	log.Infof("fetching registrations for %s", slug)
+	log.Infof("getting registrations for %s", slug)
 
 	info, err := smashgg.GetTournamentRegistrationInfo(slug)
 	if err != nil {
 		log.Fatal("failed to get tournament info: %s", err)
 	}
-	if *fetchRegsStdoutFlag {
+	if *getRegsStdoutFlag {
 		blob, err := smashgg.LoadAttendeesRaw(info)
 		if err != nil {
 			log.Fatalf("failed to get attendee list: %v", err)
@@ -84,7 +84,7 @@ func fetchRegs(app *app.App, args []string) {
 	}
 	attendees, err := smashgg.LoadAttendees(info)
 	if err != nil {
-		log.Fatalf("failed to fetch attendee list: %v", err)
+		log.Fatalf("failed to get attendee list: %v", err)
 	}
 
 	log.Infof("storing %d participants for %s", len(attendees.Registrations), slug)
